@@ -27,7 +27,7 @@ static inline _Bool isLeq(const double a, const double b)
 
 static PyObject *OperatorNameError;
 
-/*  wrapped cosine function */
+
 static PyObject* line_segment(PyObject* self, PyObject* args, PyObject* keywds)
 {
     double a, b, kappa;
@@ -121,7 +121,7 @@ static PyObject* line_segment(PyObject* self, PyObject* args, PyObject* keywds)
 }
 
 
-/*  wrapped cosine function */
+
 static PyObject* square(PyObject* self, PyObject* args, PyObject* keywds)
 {
     int n, m;
@@ -258,11 +258,137 @@ static PyObject* square(PyObject* self, PyObject* args, PyObject* keywds)
 }
 
 
+
+//static PyObject* circle(PyObject* self, PyObject* args, PyObject* keywds)
+//{
+//    int n, m;
+//    double R;
+//    char *operator_type;
+//    PyArrayObject *in_array_r, *in_array_phi, *in_array_rho, *in_array_psi;
+//    PyObject      *out_array;
+//    NpyIter *in_iter_r, *in_iter_phi, *in_iter_rho, *in_iter_psi;
+//    NpyIter *out_iter;
+//    NpyIter_IterNextFunc *in_iternext_r, *in_iternext_phi, *in_iternext_rho, *in_iternext_psi;
+//    NpyIter_IterNextFunc *out_iternext;
+//
+//    /*  parse single numpy array argument */
+//    static char *kwlist[] = {"r", "phi", "rho", "psi", "R", "n", "operator", NULL};
+//
+//    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!O!O!O!d|ds", kwlist, \
+//                          &PyArray_Type, &in_array_r, &PyArray_Type, &in_array_phi, \
+//                          &PyArray_Type, &in_array_rho, &PyArray_Type, &in_array_psi, \
+//                          &R, &n, &operator_type))
+//        return NULL;
+//
+//    m = n;
+//
+//    /*  construct the output array, like the input array */
+//    out_array = PyArray_NewLikeArray(in_array_r, NPY_ANYORDER, NULL, 0);
+//    if (out_array == NULL)
+//        return NULL;
+//
+//    /*  create the iterators */
+//    in_iter_r = NpyIter_New(in_array_r, NPY_ITER_READONLY, NPY_KEEPORDER, NPY_NO_CASTING, NULL);
+//    in_iter_phi = NpyIter_New(in_array_phi, NPY_ITER_READONLY, NPY_KEEPORDER, NPY_NO_CASTING, NULL);
+//    in_iter_rho = NpyIter_New(in_array_rho, NPY_ITER_READONLY, NPY_KEEPORDER, NPY_NO_CASTING, NULL);
+//    in_iter_psi = NpyIter_New(in_array_psi, NPY_ITER_READONLY, NPY_KEEPORDER, NPY_NO_CASTING, NULL);
+//    if (in_iter_r == NULL || in_iter_phi == NULL || in_iter_rho == NULL || in_iter_psi == NULL)
+//        goto fail;
+//
+//    out_iter = NpyIter_New((PyArrayObject *)out_array, NPY_ITER_READWRITE,
+//                          NPY_KEEPORDER, NPY_NO_CASTING, NULL);
+//    if (out_iter == NULL) {
+//        NpyIter_Deallocate(in_iter_r);
+//        NpyIter_Deallocate(in_iter_phi);
+//        NpyIter_Deallocate(in_iter_rho);
+//        NpyIter_Deallocate(in_iter_psi);
+//        goto fail;
+//    }
+//
+//    in_iternext_r = NpyIter_GetIterNext(in_iter_r, NULL);
+//    in_iternext_phi = NpyIter_GetIterNext(in_iter_phi, NULL);
+//    in_iternext_rho = NpyIter_GetIterNext(in_iter_rho, NULL);
+//    in_iternext_psi = NpyIter_GetIterNext(in_iter_psi, NULL);
+//
+//    out_iternext = NpyIter_GetIterNext(out_iter, NULL);
+//    if (in_iternext_r == NULL || in_iternext_phi == NULL || \
+//        in_iternext_rho == NULL || in_iternext_psi == NULL || \
+//        out_iternext == NULL) {
+//        NpyIter_Deallocate(in_iter_r);
+//        NpyIter_Deallocate(in_iter_phi);
+//        NpyIter_Deallocate(in_iter_rho);
+//        NpyIter_Deallocate(in_iter_psi);
+//        NpyIter_Deallocate(out_iter);
+//        goto fail;
+//    }
+//    double ** r = (double **) NpyIter_GetDataPtrArray(in_iter_r);
+//    double ** phi = (double **) NpyIter_GetDataPtrArray(in_iter_phi);
+//    double ** rho = (double **) NpyIter_GetDataPtrArray(in_iter_rho);
+//    double ** psi = (double **) NpyIter_GetDataPtrArray(in_iter_psi);
+//    double ** out_dataptr = (double **) NpyIter_GetDataPtrArray(out_iter);
+//
+//    /*  iterate over the arrays */
+//    if(strcmp(operator_type, LAPLACE_OPERATOR) == 0)
+//    {
+//        do {
+//            **out_dataptr = (1. / (4. * M_PI)) * \
+//               log((**r * **r * **rho * **rho - 2 * R * R * **r * **rho * cos(**phi - **psi) + R * R * R * R) / \
+//               (R * R * (**r * **r - 2 * **r * **rho * cos(**phi - **psi) + **rho * **rho)));
+//
+//        } while(in_iternext_r(in_iter_r) && in_iternext_phi(in_iter_phi) && \
+//                in_iternext_rho(in_iter_rho) && in_iternext_psi(in_iter_psi) && \
+//                out_iternext(out_iter));
+//    }
+    // TODO:
+//    else if(strcmp(operator_type, GELMGOLS_OPERATOR) == 0)
+//    {
+//        register double sum;
+//        do {
+//            sum = 0.0;
+//            for(int ni = 1; ni <= n; ++ni)
+//            {
+//                pni = (M_PI * ni) / a;
+//                for(int mi = 1; mi <= m; ++mi)
+//                {
+//                    qmi = (M_PI * mi) / b;
+//                    sum += NULL;
+//                }
+//            }
+//            **out_dataptr = (4. / (a * b)) * sum;
+//
+//        } while(in_iternext_x1(in_iter_x1) && in_iternext_x2(in_iter_x2) && \
+//                in_iternext_s1(in_iter_s1) && in_iternext_s2(in_iter_s2) && \
+//                out_iternext(out_iter));
+//    }
+    else
+    {
+        PyErr_SetString(OperatorNameError, "Wrong name of operator. Available operators: 'laplace', 'gelmgols'.");
+        return NULL;
+    }
+
+
+    /*  clean up and return the result */
+    NpyIter_Deallocate(in_iter_r);
+    NpyIter_Deallocate(in_iter_phi);
+    NpyIter_Deallocate(in_iter_rho);
+    NpyIter_Deallocate(in_iter_psi);
+    NpyIter_Deallocate(out_iter);
+    Py_INCREF(out_array);
+    return out_array;
+
+    /*  in case bad things happen */
+    fail:
+        Py_XDECREF(out_array);
+        return NULL;
+}
+
+
 /*  define functions in module */
 static PyMethodDef GreenMethods[] =
 {
      {"line_segment", (PyCFunction)line_segment, METH_VARARGS|METH_KEYWORDS, ""},
      {"square", (PyCFunction)square, METH_VARARGS|METH_KEYWORDS, ""},
+     //{"circle", (PyCFunction)circle, METH_VARARGS|METH_KEYWORDS, ""},
      {NULL, NULL, 0, NULL}
 };
 
