@@ -360,27 +360,27 @@ static PyObject* square(PyObject* self, PyObject* args, PyObject* keywds)
 //                in_iternext_s1(in_iter_s1) && in_iternext_s2(in_iter_s2) && \
 //                out_iternext(out_iter));
 //    }
-    else
-    {
-        PyErr_SetString(OperatorNameError, "Wrong name of operator. Available operators: 'laplace', 'gelmgols'.");
-        return NULL;
-    }
-
-
-    /*  clean up and return the result */
-    NpyIter_Deallocate(in_iter_r);
-    NpyIter_Deallocate(in_iter_phi);
-    NpyIter_Deallocate(in_iter_rho);
-    NpyIter_Deallocate(in_iter_psi);
-    NpyIter_Deallocate(out_iter);
-    Py_INCREF(out_array);
-    return out_array;
-
-    /*  in case bad things happen */
-    fail:
-        Py_XDECREF(out_array);
-        return NULL;
-}
+//    else
+//    {
+//        PyErr_SetString(OperatorNameError, "Wrong name of operator. Available operators: 'laplace', 'gelmgols'.");
+//        return NULL;
+//    }
+//
+//
+//    /*  clean up and return the result */
+//    NpyIter_Deallocate(in_iter_r);
+//    NpyIter_Deallocate(in_iter_phi);
+//    NpyIter_Deallocate(in_iter_rho);
+//    NpyIter_Deallocate(in_iter_psi);
+//    NpyIter_Deallocate(out_iter);
+//    Py_INCREF(out_array);
+//    return out_array;
+//
+//    /*  in case bad things happen */
+//    fail:
+//        Py_XDECREF(out_array);
+//        return NULL;
+//}
 
 
 /*  define functions in module */
