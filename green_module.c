@@ -382,12 +382,168 @@ static PyObject* circle(PyObject* self, PyObject* args, PyObject* keywds)
 }
 
 
+static PyObject* parallelepiped(PyObject* self, PyObject* args, PyObject* keywds)
+{
+    int n, m, k;
+    double a, b, c, kappa;
+    char *operator_type;
+    PyArrayObject *in_array_x1, *in_array_x2, *in_array_x3, *in_array_s1, *in_array_s2, *in_array_s3;
+    PyObject      *out_array;
+    NpyIter *in_iter_x1, *in_iter_x2, *in_iter_x3, *in_iter_s1, *in_iter_s2, *in_iter_s3;
+    NpyIter *out_iter;
+    NpyIter_IterNextFunc *in_iternext_x1, *in_iternext_x2, *in_iternext_x3, *in_iternext_s1, *in_iternext_s2, *in_iternext_s3;
+    NpyIter_IterNextFunc *out_iternext;
+
+    /*  parse single numpy array argument */
+    static char *kwlist[] = {"x1", "x2", "x3", "s1", "s2", "s3", "abc", "n", "kappa", "operator", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O!O!O!O!O!O!(ddd)i|ds", kwlist, \
+                          &PyArray_Type, &in_array_x1, &PyArray_Type, &in_array_x2, &PyArray_Type, &in_array_x3, \
+                          &PyArray_Type, &in_array_s1, &PyArray_Type, &in_array_s2, &PyArray_Type, &in_array_s3, \
+                          &a, &b, &c, &n, &kappa, &operator_type))
+        return NULL;
+
+    m = n;
+    k = n;
+
+    /*  construct the output array, like the input array */
+    out_array = PyArray_NewLikeArray(in_array_x1, NPY_ANYORDER, NULL, 0);
+    if (out_array == NULL)
+        return NULL;
+
+    /*  create the iterators */
+    in_iter_x1 = NpyIter_New(in_array_x1, NPY_ITER_READONLY, NPY_KEEPORDER, NPY_NO_CASTING, NULL);
+    in_iter_x2 = NpyIter_New(in_array_x2, NPY_ITER_READONLY, NPY_KEEPORDER, NPY_NO_CASTING, NULL);
+    in_iter_x3 = NpyIter_New(in_array_x3, NPY_ITER_READONLY, NPY_KEEPORDER, NPY_NO_CASTING, NULL);
+    in_iter_s1 = NpyIter_New(in_array_s1, NPY_ITER_READONLY, NPY_KEEPORDER, NPY_NO_CASTING, NULL);
+    in_iter_s2 = NpyIter_New(in_array_s2, NPY_ITER_READONLY, NPY_KEEPORDER, NPY_NO_CASTING, NULL);
+    in_iter_s3 = NpyIter_New(in_array_s3, NPY_ITER_READONLY, NPY_KEEPORDER, NPY_NO_CASTING, NULL);
+    if (in_iter_x1 == NULL || in_iter_x2 == NULL || in_iter_x3 == NULL || in_iter_s1 == NULL || in_iter_s2 == NULL || in_iter_s3 == NULL)
+        goto fail;
+
+    out_iter = NpyIter_New((PyArrayObject *)out_array, NPY_ITER_READWRITE,
+                          NPY_KEEPORDER, NPY_NO_CASTING, NULL);
+    if (out_iter == NULL) {
+        NpyIter_Deallocate(in_iter_x1);
+        NpyIter_Deallocate(in_iter_x2);
+        NpyIter_Deallocate(in_iter_x3);
+        NpyIter_Deallocate(in_iter_s1);
+        NpyIter_Deallocate(in_iter_s2);
+        NpyIter_Deallocate(in_iter_s3);
+        goto fail;
+    }
+
+    in_iternext_x1 = NpyIter_GetIterNext(in_iter_x1, NULL);
+    in_iternext_x2 = NpyIter_GetIterNext(in_iter_x2, NULL);
+    in_iternext_x3 = NpyIter_GetIterNext(in_iter_x3, NULL);
+    in_iternext_s1 = NpyIter_GetIterNext(in_iter_s1, NULL);
+    in_iternext_s2 = NpyIter_GetIterNext(in_iter_s2, NULL);
+    in_iternext_s3 = NpyIter_GetIterNext(in_iter_s3, NULL);
+
+    out_iternext = NpyIter_GetIterNext(out_iter, NULL);
+    if (in_iternext_x1 == NULL || in_iternext_x2 == NULL || in_iternext_x3 == NULL || \
+        in_iternext_s1 == NULL || in_iternext_s2 == NULL || in_iternext_s3 == NULL || \
+        out_iternext == NULL) {
+        NpyIter_Deallocate(in_iter_x1);
+        NpyIter_Deallocate(in_iter_x2);
+        NpyIter_Deallocate(in_iter_x3);
+        NpyIter_Deallocate(in_iter_s1);
+        NpyIter_Deallocate(in_iter_s2);
+        NpyIter_Deallocate(in_iter_s3);
+        NpyIter_Deallocate(out_iter);
+        goto fail;
+    }
+    double ** in_dataptr_x1 = (double **) NpyIter_GetDataPtrArray(in_iter_x1);
+    double ** in_dataptr_x2 = (double **) NpyIter_GetDataPtrArray(in_iter_x2);
+    double ** in_dataptr_x3 = (double **) NpyIter_GetDataPtrArray(in_iter_x3);
+    double ** in_dataptr_s1 = (double **) NpyIter_GetDataPtrArray(in_iter_s1);
+    double ** in_dataptr_s2 = (double **) NpyIter_GetDataPtrArray(in_iter_s2);
+    double ** in_dataptr_s3 = (double **) NpyIter_GetDataPtrArray(in_iter_s3);
+    double ** out_dataptr = (double **) NpyIter_GetDataPtrArray(out_iter);
+
+    /*  iterate over the arrays */
+    register double sum = 0.0;
+    register double pni, qmi, rki;
+    if(strcmp(operator_type, LAPLACE_OPERATOR) == 0)
+    {
+        do {
+            sum = 0.0;
+            for(int ni = 1; ni <= n; ++ni)
+            {
+                pni = (M_PI * ni) / a;
+                for(int mi = 1; mi <= m; ++mi)
+                {
+                    qmi = (M_PI * mi) / b;
+                    for(int ki = 1; ki <= k; ++ki)
+                    {
+                        rki = (M_PI * ki) / c;
+                        sum += (sin(pni * (**in_dataptr_x1)) * sin(qmi * (**in_dataptr_x2)) * sin(rki * (**in_dataptr_x3)) *\
+                                sin(pni * (**in_dataptr_s1)) * sin(qmi * (**in_dataptr_s2)) * sin(rki * (**in_dataptr_s3))) / \
+                                (pni * pni + qmi * qmi + rki * rki);
+                    }
+                }
+            }
+            **out_dataptr = (8. / (a * b * c)) * sum;
+
+        } while(in_iternext_x1(in_iter_x1) && in_iternext_x2(in_iter_x2) && in_iternext_x3(in_iter_x3) && \
+                in_iternext_s1(in_iter_s1) && in_iternext_s2(in_iter_s2) && in_iternext_s3(in_iter_s3) && \
+                out_iternext(out_iter));
+    }
+    else if(strcmp(operator_type, GELMGOLS_OPERATOR) == 0)
+    {
+        do {
+            sum = 0.0;
+            for(int ni = 1; ni <= n; ++ni)
+            {
+                pni = (M_PI * ni) / a;
+                for(int mi = 1; mi <= m; ++mi)
+                {
+                    qmi = (M_PI * mi) / b;
+                    for(int ki = 1; ki <= k; ++ki)
+                    {
+                        rki = (M_PI * ki) / c;
+                        sum += (sin(pni * (**in_dataptr_x1)) * sin(qmi * (**in_dataptr_x2)) * sin(rki * (**in_dataptr_x3)) *\
+                                sin(pni * (**in_dataptr_s1)) * sin(qmi * (**in_dataptr_s2)) * sin(rki * (**in_dataptr_s3))) / \
+                                (pni * pni + qmi * qmi + rki * rki + kappa * kappa);
+                    }
+                }
+            }
+            **out_dataptr = (8. / (a * b * c)) * sum;
+
+        } while(in_iternext_x1(in_iter_x1) && in_iternext_x2(in_iter_x2) && in_iternext_x3(in_iter_x3) && \
+                in_iternext_s1(in_iter_s1) && in_iternext_s2(in_iter_s2) && in_iternext_s3(in_iter_s3) && \
+                out_iternext(out_iter));
+    }
+    else
+    {
+        PyErr_SetString(OperatorNameError, "Wrong name of operator. Available operators: 'laplace', 'gelmgols'.");
+        return NULL;
+    }
+
+
+    /*  clean up and return the result */
+    NpyIter_Deallocate(in_iter_x1);
+    NpyIter_Deallocate(in_iter_x2);
+    NpyIter_Deallocate(in_iter_s1);
+    NpyIter_Deallocate(in_iter_s2);
+    NpyIter_Deallocate(out_iter);
+    Py_INCREF(out_array);
+    return out_array;
+
+    /*  in case bad things happen */
+    fail:
+        Py_XDECREF(out_array);
+        return NULL;
+}
+
+
 /*  define functions in module */
 static PyMethodDef GreenMethods[] =
 {
      {"line_segment", (PyCFunction)line_segment, METH_VARARGS|METH_KEYWORDS, ""},
      {"square", (PyCFunction)square, METH_VARARGS|METH_KEYWORDS, ""},
      {"circle", (PyCFunction)circle, METH_VARARGS|METH_KEYWORDS, ""},
+     {"parallelepiped", (PyCFunction)parallelepiped, METH_VARARGS|METH_KEYWORDS, ""},
      {NULL, NULL, 0, NULL}
 };
 
